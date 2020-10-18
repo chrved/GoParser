@@ -1,8 +1,10 @@
 package token
 
 type Token struct {
-	Type    TokenType
-	Literal string
+	Type          TokenType
+	Literal       string
+	Precedence    int
+	Associativity string
 }
 type TokenType string
 
@@ -18,14 +20,14 @@ const (
 
 	POW = "POW"
 
-	OPEN_BRACKET = "OPEN_BRACKET"
+	OPEN_BRACKET  = "OPEN_BRACKET"
 	CLOSE_BRACKET = "CLOSE_BRACKET"
 
 	WHITESPACE = "WHITESPACE"
 
-	NUMBER = "NUMBER"
+	NUMBER  = "NUMBER"
 	INTEGER = "INTEGER"
-	DOUBLE = "DOUBLE"
+	DOUBLE  = "DOUBLE"
 )
 
 //INTEGER ^[0-9]+
