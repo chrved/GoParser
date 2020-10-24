@@ -1,11 +1,5 @@
 package token
 
-type Token struct {
-	Type          TokenType
-	Literal       string
-	Precedence    int
-	Associativity string
-}
 type TokenType string
 
 const (
@@ -29,6 +23,13 @@ const (
 	INTEGER = "INTEGER"
 	DOUBLE  = "DOUBLE"
 )
+
+type Token struct {
+	Type          TokenType
+	Literal       string
+	Precedence    int
+	Associativity string
+}
 
 //INTEGER ^[0-9]+
 //DOUBLE [0-9]+\.[0-9]+

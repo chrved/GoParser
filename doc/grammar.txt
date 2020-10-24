@@ -1,12 +1,38 @@
 
-
-expression : term | expression PLUS expression | expression MINUS expression
+VERSION 1:
+expression : term | expression PLUS term | expression MINUS term
     term : factor | term MULT factor | term DIV factor | term MOD factor
         factor : primary | MINUS factor | PLUS factor
             primary : number | OPEN_BRACKET expression CLOSE_BRACKET
                 number : INTEGER | DOUBLE
 
 
+VERSION 2:
+expression : term | expression PLUS term | expression MINUS term
+    term : factor | term MULT factor | term DIV factor | term MOD factor
+        factor : primary | MINUS factor | PLUS factor
+            primary : number | OPEN_BRACKET expression CLOSE_BRACKET
+                number : IDENTIFIER | INTEGER | DOUBLE
 
+VERSION 3:
+expression : signed_term expression_sum
+    expression_sum: PLUS signed_term | MINUS signed_term
+        signed_term: MINUS term | term
+            term : factor
+
+                factor : primary | MINUS factor | PLUS factor
+                    primary : number
+                        number : INTEGER | DOUBLE
+
+------------------------------------
+VERSION 3:
+expression : signed_term expression_sum
+    expression_sum: expression PLUS signed_term | expression MINUS signed_term
+        signed_term: MINUS term | term
+            term : factor | term MULT factor | term DIV factor | term MOD factor
+                term_sum:
+                factor : primary | MINUS factor | PLUS factor
+                    primary : number | OPEN_BRACKET expression CLOSE_BRACKET
+                        number : INTEGER | DOUBLE
 
 primary : IDENTIFIER | INTEGER | FLOATING_POINT | '(' expression ')'

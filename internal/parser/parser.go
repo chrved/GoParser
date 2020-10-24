@@ -2,7 +2,7 @@ package parser
 
 import (
 	"GoParser/internal/token"
-	"GoParser/internal/util"
+	"fmt"
 )
 
 const (
@@ -12,31 +12,115 @@ const (
 )
 
 type Parser struct {
-	input []token.Token
+	input     []token.Token
+	lookahead token.Token
 }
 
 func New(tokens []token.Token) *Parser {
 	return &Parser{input: tokens}
 }
 func (p *Parser) Parse() {
-	var output []token.Token
-	opStack := util.NewStack()
+	p.getNextToken()
+	fmt.Printf("START: \n %v\n%v\n", p.lookahead, p.input)
+	p.expression()
 
-	for _, tok := range p.input {
-		tokType := getTokenType(tok)
-		switch tokType {
-		case NUM:
-			output = append(output, tok)
-			break
-		case OP:
-			// CHANGE THIS
-			opStack.Push(tok)
-
-		}
+	if p.lookahead.Type != token.EPSILON {
+		panic("END not ok")
 	}
 }
+func (p *Parser) expression() {
+	fmt.Printf("Enter %s\n", "Expression")
 
-func (p *Parser) CreateAST() {
+	p.signed_term()
+	p.expression_sum()
+
+	fmt.Printf("Leave %s\n", "Expression")
+}
+func (p *Parser) expression_sum() {
+	fmt.Printf("Enter %s\n", "Expression_sum")
+	if p.lookahead.Type == token.PLUS {
+		fmt.Printf("Found %s %v\n", "+", p.lookahead)
+		p.getNextToken()
+		p.signed_term()
+
+		fmt.Printf("Leave %s\n", "Expression_sum")
+		return
+	}
+	if p.lookahead.Type == token.MINUS {
+		fmt.Printf("Found %s %v\n", "-", p.lookahead)
+		p.getNextToken()
+		p.signed_term()
+
+		fmt.Printf("Leave %s\n", "Expression_sum")
+		return
+	}
+
+}
+func (p *Parser) signed_term() {
+	fmt.Printf("Enter %s\n", "Signed_Term")
+	if p.lookahead.Type == token.MINUS {
+		fmt.Printf("Found %s %v\n", "-", p.lookahead)
+		p.getNextToken()
+		p.term()
+
+		fmt.Printf("Leave %s\n", "Signed_Term")
+		return
+	}
+	p.term()
+
+	fmt.Printf("Leave %s\n", "Signed_Term")
+}
+func (p *Parser) term() {
+	fmt.Printf("Enter %s\n", "Term")
+
+	p.factor()
+
+	fmt.Printf("Leave %s\n", "Term")
+}
+func (p *Parser) factor() {
+	fmt.Printf("Enter %s\n", "Factor")
+
+	p.primary()
+
+	fmt.Printf("Leave %s\n", "Factor")
+}
+func (p *Parser) primary() {
+	fmt.Printf("Enter %s\n", "Primary")
+
+	p.number()
+
+	fmt.Printf("Leave %s\n", "Primary")
+}
+func (p *Parser) number() {
+	fmt.Printf("Enter %s\n", "Number")
+
+	if p.lookahead.Type == token.NUMBER {
+		fmt.Printf("Found %s %v\n", "Number", p.lookahead)
+		p.getNextToken()
+	} else {
+		panic("Not a NUMBER")
+	}
+
+	fmt.Printf("Leave %s\n", "Number")
+}
+func (p *Parser) getNextToken() {
+	if p.input[0].Type == token.WHITESPACE {
+		p.removeWhitespace()
+	}
+	p.lookahead = p.input[0]
+	fmt.Printf("Get next token %v\n", p.lookahead)
+	p.input = p.input[1:]
+
+}
+func (p *Parser) removeWhitespace() {
+	fmt.Println("REMOVING WHITESPACE's")
+	for {
+		if p.input[0].Type == token.WHITESPACE {
+			p.input = p.input[1:]
+		} else {
+			break
+		}
+	}
 }
 
 func getTokenType(tok token.Token) string {
