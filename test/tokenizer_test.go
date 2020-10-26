@@ -43,6 +43,13 @@ func TestTokenizerParse(t *testing.T) {
 				token.NewToken(token.WHITESPACE, " "),
 				token.NewToken(token.NUMBER, "2"),
 				token.NewToken(token.EPSILON, "EPSILON")}},
+		{"sin(2)",
+			[]token.Token{
+				token.NewToken(token.FUNCTION, "sin"),
+				token.NewToken(token.OPEN_BRACKET, "("),
+				token.NewToken(token.NUMBER, "2"),
+				token.NewToken(token.CLOSE_BRACKET, ")"),
+				token.NewToken(token.EPSILON, "EPSILON")}},
 	}
 
 	for i, tt := range tests {
@@ -69,7 +76,8 @@ func createTokenizer() *token.Tokenizer {
 		AddToken(token.POW, "^\\^").
 		AddToken(token.OPEN_BRACKET, "^\\(").
 		AddToken(token.CLOSE_BRACKET, "^\\)").
-		AddToken(token.NUMBER, "^\\d+(\\.\\d+)?")
+		AddToken(token.NUMBER, "^\\d+(\\.\\d+)?").
+		AddToken(token.FUNCTION, "^sin|^cos|^tan|^sqrt")
 	//AddToken(token.INTEGER, "^[0-9]+").
 	//AddToken(token.DOUBLE,"^[0-9]+\\.[0-9]+")
 }

@@ -3,12 +3,50 @@ package test
 import (
 	"GoParser/internal/parser"
 	"GoParser/internal/token"
-	"reflect"
+	"fmt"
 	"testing"
 )
 
 func TestParser(t *testing.T) {
-	tokens := getTokenizer().SetInputString("1.33 + 2").Parse().GetParsedToken()
+	tokens := getTokenizer().SetInputString("1.33 + 2 +3 * 3").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+	val := p.GetResult()
+	fmt.Println(val)
+}
+func TestParser1(t *testing.T) {
+	tokens := getTokenizer().SetInputString("(1.33 + 2) * 3").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+}
+func TestParser2(t *testing.T) {
+	tokens := getTokenizer().SetInputString("(1.33 + 2^2) * 3").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+}
+func TestParser3(t *testing.T) {
+	tokens := getTokenizer().SetInputString("sin(1.33 + 2^2) * 3").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+}
+func TestParser4(t *testing.T) {
+	tokens := getTokenizer().SetInputString("-1 + 2").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+}
+func TestParser5(t *testing.T) {
+	tokens := getTokenizer().SetInputString("-5 - 10").Parse().GetParsedToken()
+
+	p := parser.New(tokens)
+	p.Parse()
+}
+func TestParser6(t *testing.T) {
+	tokens := getTokenizer().SetInputString("5 * (cos(2) + 10)").Parse().GetParsedToken()
 
 	p := parser.New(tokens)
 	p.Parse()
@@ -24,29 +62,10 @@ func getTokenizer() *token.Tokenizer {
 		AddToken(token.POW, "^\\^").
 		AddToken(token.OPEN_BRACKET, "^\\(").
 		AddToken(token.CLOSE_BRACKET, "^\\)").
-		AddToken(token.NUMBER, "^\\d+(\\.\\d+)?")
+		AddToken(token.NUMBER, "^\\d+(\\.\\d+)?").
+		AddToken(token.FUNCTION, "^sin|^cos|^tan|^sqrt")
 	//AddToken(token.INTEGER, "^[0-9]+").
 	//AddToken(token.DOUBLE,"^[0-9]+\\.[0-9]+")
-}
-
-func TestNew(t *testing.T) {
-	type args struct {
-		tokens []token.Token
-	}
-	tests := []struct {
-		name string
-		args args
-		want *parser.Parser
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := parser.New(tt.args.tokens); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 //func TestParser_Parse(t *testing.T) {

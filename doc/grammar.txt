@@ -16,13 +16,39 @@ expression : term | expression PLUS term | expression MINUS term
 
 VERSION 3:
 expression : signed_term expression_sum
-    expression_sum: PLUS signed_term | MINUS signed_term
+    expression_sum: PLUS-MINUS term expression_sum | EPSILON
         signed_term: MINUS term | term
-            term : factor
+            term: factor term_sum
+                term_sum: MULT-DIV signed_factor term_sum
+                    factor: argument factor_sum
+                        signed_factor -> MINUS factor | factor
+                            factor_sum   -> RAISED signed_factor | EPSILON
+                                argument    -> value | FUNCTION argument | OPEN_BRACKET expression CLOSE_BRACKET
+                                    value       -> NUMBER
+                                    value       -> VARIABLE
 
                 factor : primary | MINUS factor | PLUS factor
                     primary : number
                         number : INTEGER | DOUBLE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+expression  -> signed_term sum_op
+    sum_op      -> PLUSMINUS term sum_op
+    sum_op      -> EPSILON
+        signed_term -> PLUSMINUS term
+        signed_term -> term
+            term        -> factor term_op
+            term_op     -> MULTDIV signed_factor term_op
+            term_op     -> EPSILON
+                signed_factor -> PLUSMINUS factor
+                signed_factor -> factor
+                    factor      -> argument factor_op
+                    factor_op   -> RAISED signed_factor
+                    factor_op   -> EPSILON
+                        argument    -> value
+                        argument    -> FUNCTION argument
+                        argument    -> OPEN_BRACKET expression CLOSE_BRACKET
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ------------------------------------
 VERSION 3:
@@ -36,3 +62,7 @@ expression : signed_term expression_sum
                         number : INTEGER | DOUBLE
 
 primary : IDENTIFIER | INTEGER | FLOATING_POINT | '(' expression ')'
+
+
+
+

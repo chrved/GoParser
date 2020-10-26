@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"GoParser/internal/ast/node"
 	"GoParser/internal/token"
 	"fmt"
 )
@@ -14,106 +15,151 @@ const (
 type Parser struct {
 	input     []token.Token
 	lookahead token.Token
+
+	result node.Node
 }
 
 func New(tokens []token.Token) *Parser {
 	return &Parser{input: tokens}
 }
+func (p *Parser) GetResult() float64 {
+	return p.result.GetValue()
+}
 func (p *Parser) Parse() {
 	p.getNextToken()
 	fmt.Printf("START: \n %v\n%v\n", p.lookahead, p.input)
-	p.expression()
+	p.result = p.expression()
 
 	if p.lookahead.Type != token.EPSILON {
 		panic("END not ok")
 	}
+	fmt.Printf("END: \n %v\n%v\n", p.lookahead, p.input)
 }
-func (p *Parser) expression() {
-	fmt.Printf("Enter %s\n", "Expression")
-
-	p.signed_term()
-	p.expression_sum()
-
-	fmt.Printf("Leave %s\n", "Expression")
+func (p *Parser) expression() node.Node {
+	//expression : signed_term expression_sum
+	exp := p.signed_term()
+	return p.expression_sum(exp)
 }
-func (p *Parser) expression_sum() {
-	fmt.Printf("Enter %s\n", "Expression_sum")
-	if p.lookahead.Type == token.PLUS {
-		fmt.Printf("Found %s %v\n", "+", p.lookahead)
+func (p *Parser) expression_sum(arg node.Node) node.Node {
+	//expression_sum: PLUS-MINUS term expression_sum | EPSILON
+	if p.lookahead.Type == token.PLUS || p.lookahead.Type == token.MINUS {
+		token_sign := p.lookahead
 		p.getNextToken()
-		p.signed_term()
+		term := p.term()
+		var sumnode node.Node
+		if token_sign.Type == token.PLUS {
+			sumnode = node.NewAdditionNode([]node.Node{arg, term})
+		} else {
+			sumnode = node.NewSubtractionNode([]node.Node{arg, term})
+		}
 
-		fmt.Printf("Leave %s\n", "Expression_sum")
-		return
+		return p.expression_sum(sumnode)
 	}
-	if p.lookahead.Type == token.MINUS {
-		fmt.Printf("Found %s %v\n", "-", p.lookahead)
+	return arg
+}
+
+func (p *Parser) term() node.Node {
+	fac := p.factor()
+	return p.term_sum(fac)
+}
+func (p *Parser) term_sum(arg node.Node) node.Node {
+	if p.lookahead.Type == token.MULT || p.lookahead.Type == token.DIV {
+		var mult_div_node node.Node
+		if p.lookahead.Type == token.MULT {
+			mult_div_node = node.NewMultiplicationNode([]node.Node{arg})
+		} else {
+			mult_div_node = node.NewMultiplicationNode([]node.Node{arg})
+		}
 		p.getNextToken()
-		p.signed_term()
+		fac := p.signed_factor()
+		mult_div_node.AddNode(fac)
 
-		fmt.Printf("Leave %s\n", "Expression_sum")
-		return
+		return p.term_sum(mult_div_node)
 	}
-
+	return arg
 }
-func (p *Parser) signed_term() {
-	fmt.Printf("Enter %s\n", "Signed_Term")
-	if p.lookahead.Type == token.MINUS {
-		fmt.Printf("Found %s %v\n", "-", p.lookahead)
+func (p *Parser) signed_term() node.Node {
+	if p.lookahead.Type == token.MINUS || p.lookahead.Type == token.PLUS {
+		//positive := true
+		//if p.lookahead.Type == token.MINUS {
+		//	positive = false
+		//}
 		p.getNextToken()
-		p.term()
 
-		fmt.Printf("Leave %s\n", "Signed_Term")
-		return
+		term := p.term()
+		//ERROR
+		return term
 	}
-	p.term()
-
-	fmt.Printf("Leave %s\n", "Signed_Term")
+	return p.term()
 }
-func (p *Parser) term() {
-	fmt.Printf("Enter %s\n", "Term")
 
-	p.factor()
-
-	fmt.Printf("Leave %s\n", "Term")
+func (p *Parser) factor() node.Node {
+	arg := p.argument()
+	return p.factor_sum(arg)
 }
-func (p *Parser) factor() {
-	fmt.Printf("Enter %s\n", "Factor")
+func (p *Parser) factor_sum(arg node.Node) node.Node {
+	if p.lookahead.Type == token.POW {
+		p.getNextToken()
+		exponent := p.signed_factor()
+		return node.NewExponentiationNode([]node.Node{arg, exponent})
+	}
 
-	p.primary()
-
-	fmt.Printf("Leave %s\n", "Factor")
+	return arg
 }
-func (p *Parser) primary() {
-	fmt.Printf("Enter %s\n", "Primary")
-
-	p.number()
-
-	fmt.Printf("Leave %s\n", "Primary")
+func (p *Parser) signed_factor() node.Node {
+	if p.lookahead.Type == token.MINUS || p.lookahead.Type == token.PLUS {
+		positive := true
+		if p.lookahead.Type == token.MINUS {
+			positive = false
+		}
+		p.getNextToken()
+		fac := p.factor()
+		fac.SetPositive(positive)
+		return node.NewAdditionNode([]node.Node{fac})
+	}
+	return p.factor()
 }
-func (p *Parser) number() {
-	fmt.Printf("Enter %s\n", "Number")
 
+func (p *Parser) argument() node.Node {
+	if p.lookahead.Type == token.FUNCTION {
+		funcType := p.lookahead.Literal
+		p.getNextToken()
+		funcValue := p.argument()
+		return node.NewFunctionNode(funcType, funcValue)
+	}
+	if p.lookahead.Type == token.OPEN_BRACKET {
+		p.getNextToken()
+		exp := p.expression()
+
+		if p.lookahead.Type != token.CLOSE_BRACKET {
+			panic("Wrong token")
+		}
+
+		p.getNextToken()
+		return exp
+	}
+
+	return p.value()
+}
+func (p *Parser) value() node.Node {
 	if p.lookahead.Type == token.NUMBER {
-		fmt.Printf("Found %s %v\n", "Number", p.lookahead)
+		numberNode := node.NewConstantNode(p.lookahead.Literal, true)
 		p.getNextToken()
+		return numberNode
 	} else {
 		panic("Not a NUMBER")
 	}
-
-	fmt.Printf("Leave %s\n", "Number")
 }
+
 func (p *Parser) getNextToken() {
 	if p.input[0].Type == token.WHITESPACE {
 		p.removeWhitespace()
 	}
 	p.lookahead = p.input[0]
-	fmt.Printf("Get next token %v\n", p.lookahead)
 	p.input = p.input[1:]
 
 }
 func (p *Parser) removeWhitespace() {
-	fmt.Println("REMOVING WHITESPACE's")
 	for {
 		if p.input[0].Type == token.WHITESPACE {
 			p.input = p.input[1:]
@@ -123,6 +169,9 @@ func (p *Parser) removeWhitespace() {
 	}
 }
 
+func printFound(token token.Token) {
+	fmt.Printf("Found %v\n", token)
+}
 func getTokenType(tok token.Token) string {
 	if tok.Type == token.DOUBLE || tok.Type == token.INTEGER {
 		return NUM
