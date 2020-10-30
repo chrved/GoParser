@@ -6,29 +6,6 @@ import (
 	"testing"
 )
 
-func TestTokenizerAddToken(t *testing.T) {
-
-	tests := []struct {
-		tokens    []token.TokenType
-		input     []string
-		nrOfToken int
-	}{
-		{[]token.TokenType{token.PLUS, token.MINUS}, []string{"^\\+", "^\\-"}, 2},
-		{[]token.TokenType{token.PLUS, token.MINUS, token.PLUS, token.MINUS}, []string{"^\\+", "^\\-", "^\\*", "^/"}, 4},
-	}
-
-	for i, tt := range tests {
-		tokenizer := token.NewTokenizer()
-		for index, _ := range tt.tokens {
-			tokenizer.AddToken(tt.tokens[index], tt.input[index])
-		}
-
-		if len(tokenizer.GetTokenInfo()) != tt.nrOfToken {
-			t.Fatalf("tests[%d] - Nr of tokens wrong. expected=%q, got=%q",
-				i, tt.nrOfToken, len(tokenizer.GetTokenInfo()))
-		}
-	}
-}
 func TestTokenizerParse(t *testing.T) {
 
 	tests := []struct {

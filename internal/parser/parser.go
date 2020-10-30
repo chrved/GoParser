@@ -3,13 +3,6 @@ package parser
 import (
 	"GoParser/internal/ast/node"
 	"GoParser/internal/token"
-	"fmt"
-)
-
-const (
-	NUM = "NUM"
-	OP  = "OP"
-	FUN = "FUN"
 )
 
 type Parser struct {
@@ -27,13 +20,11 @@ func (p *Parser) GetResult() float64 {
 }
 func (p *Parser) Parse() {
 	p.getNextToken()
-	fmt.Printf("START: \n %v\n%v\n", p.lookahead, p.input)
 	p.result = p.expression()
 
 	if p.lookahead.Type != token.EPSILON {
 		panic("END not ok")
 	}
-	fmt.Printf("END: \n %v\n%v\n", p.lookahead, p.input)
 }
 func (p *Parser) expression() node.Node {
 	//expression : signed_term expression_sum
@@ -79,16 +70,11 @@ func (p *Parser) term_sum(arg node.Node) node.Node {
 	return arg
 }
 func (p *Parser) signed_term() node.Node {
-	if p.lookahead.Type == token.MINUS || p.lookahead.Type == token.PLUS {
-		//positive := true
-		//if p.lookahead.Type == token.MINUS {
-		//	positive = false
-		//}
+	if p.lookahead.Type == token.MINUS {
 		p.getNextToken()
-
 		term := p.term()
-		//ERROR
-		return term
+		term.SetPositive(false)
+		return node.NewAdditionNode([]node.Node{term})
 	}
 	return p.term()
 }
@@ -167,24 +153,6 @@ func (p *Parser) removeWhitespace() {
 			break
 		}
 	}
-}
-
-func printFound(token token.Token) {
-	fmt.Printf("Found %v\n", token)
-}
-func getTokenType(tok token.Token) string {
-	if tok.Type == token.DOUBLE || tok.Type == token.INTEGER {
-		return NUM
-	}
-	if tok.Type == token.PLUS ||
-		tok.Type == token.MINUS ||
-		tok.Type == token.DIV ||
-		tok.Type == token.MULT ||
-		tok.Type == token.MOD ||
-		tok.Type == token.POW {
-		return OP
-	}
-	return token.ILLEGAL
 }
 
 ///* This implementation does not implement composite functions,functions with variable number of arguments, and unary operators. */
